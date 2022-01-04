@@ -5,7 +5,11 @@
         BYTE    $20, $08, $0A, $00, $9E, $20, $28,  $34, $30, $39, $36, $29, $3a, $8f, $20, $40, $43, $36, $34, $43, $4F, $53, $4D, $49, $4E, $20, $32, $30, $32, $32, $00, $00, $00
 
 *=$2000
-incbin  "dino.spt", 1, 1
+incbin "dino.spt", 1, 1
+*=$2800
+incbin "tiles.cst", 0, 64
+*=$3000
+incbin "level0.sdd", 1, 1
 
 joystick2 = $dc00
 spriteEnable = $d015
@@ -21,8 +25,19 @@ init    ldx #$ff
         stx sprite0P
         ldx #1
         stx sprite0C
-        ldx #128
+        ldx #$18
         stx sprite0X
+        ldx #$32
+        stx sprite0Y
+        ldx #26
+        stx $d018
+        ldx #0
+load    lda $33e8,X
+        sta $0400,X
+        inx 
+        txa
+        cmp #0
+        bne load
 loop    ldx #0
 raster  cmp $d012
         bne raster
