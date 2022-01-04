@@ -51,17 +51,6 @@
     <!--End of screen designer settings-->
     <SourceFiles>
         <SourceFile>
-            <Name>dino.spt</Name>
-            <PrgName />
-            <FileType>7</FileType>
-            <IncludeInBuild>True</IncludeInBuild>
-            <Regions />
-            <Breakpoints />
-            <Bookmarks />
-            <Topmost>False</Topmost>
-            <FileOpen>False</FileOpen>
-        </SourceFile>
-        <SourceFile>
             <Name>game.asm</Name>
             <PrgName />
             <FileType>2</FileType>
@@ -73,9 +62,20 @@
             <FileOpen>True</FileOpen>
         </SourceFile>
         <SourceFile>
-            <Name>level0.sdd</Name>
+            <Name>levels.sdd</Name>
             <PrgName />
             <FileType>9</FileType>
+            <IncludeInBuild>True</IncludeInBuild>
+            <Regions />
+            <Breakpoints />
+            <Bookmarks />
+            <Topmost>False</Topmost>
+            <FileOpen>False</FileOpen>
+        </SourceFile>
+        <SourceFile>
+            <Name>sprites.spt</Name>
+            <PrgName />
+            <FileType>7</FileType>
             <IncludeInBuild>True</IncludeInBuild>
             <Regions />
             <Breakpoints />
