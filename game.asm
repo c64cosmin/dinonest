@@ -36,7 +36,7 @@ playerMoveSpeed = 16
         BYTE    $20, $08, $0A, $00, $9E, $20, $28,  $34, $30, $39, $36, $29, $3a, $8f, $20, $40, $43, $36, $34, $43, $4F, $53, $4D, $49, $4E, $20, $32, $30, $32, $32, $00, $00, $00
 
 *=$2000
-incbin "sprites.spt", 1, 4, true
+incbin "sprites.spt", 1, 16, true
 *=$2800
 incbin "tiles.cst", 0, 255
 *=$3000
@@ -46,6 +46,7 @@ playerX             byte 0
 playerY             byte 0
 playerState         byte 0
 playerMoveIncrement byte 0
+playerAnim          byte 0
 
 *=$1000
 init            ldx #$3
@@ -69,6 +70,12 @@ init            ldx #$3
                 copyBytes $33e8, $0400, $03e8
 
 loop            lda #0
+                sta $02
+                inc $d020
+wait_loop       inc $02
+                lda $02
+                cmp #8
+                bne wait_loop
 raster          cmp $d012
                 bne raster
                 
@@ -150,21 +157,28 @@ player_move_rg  cmp #$8
                 ldx #$81
                 stx sprite1P
 player_move_dec dec playerMoveIncrement
+                inc playerAnim
                 lda playerMoveIncrement
                 cmp #0
                 bne player_draw
                 lda playerState
                 and #$f0        ;clear player direction state
                 sta playerState
-player_draw     lda playerX     ; player draw to sprite
+player_draw     lda playerAnim ;animate walk 
+                and #$7
+                ora #$80
+                sta sprite0P
+                sta 1024
+                lda playerX     ; player draw to sprite
                 adc #$17        ; offsetX
                 sta sprite0X
-                sta sprite1X
+                ;sta sprite1X
                 lda playerY
                 adc #$31        ; offsetY
                 sta sprite0Y
-                sta sprite1Y
+                ;sta sprite1Y
                 ;logic
+                dec $d020
                 dec $d020
 
                 jmp loop
