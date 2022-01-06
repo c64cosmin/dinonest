@@ -86,6 +86,21 @@ defm debug
                 and $02
                 sta 1031
 endm
+;setsprite nr,x,y,c,spr
+defm setsprite
+                ldx #/1
+                lda #/4
+                sta $d027,X
+                lda #/5
+                sta $07f8,X
+                txa
+                rol A
+                tax
+                lda #/2
+                sta $d000,X
+                lda #/3
+                sta $d001,X
+endm
 
 joystick2 = $dc00
 spriteEnable = $d015
@@ -101,6 +116,7 @@ sprite1C = $d028
 playerMoveSpeed = 16
 spriteDinoRight = $80
 spriteDinoLeft = $88
+fruitBerry = $A0
 
 ; 10 SYS (4096):REM @c64cosmin 2022
 
@@ -109,9 +125,7 @@ spriteDinoLeft = $88
         BYTE    $20, $08, $0A, $00, $9E, $20, $28,  $34, $30, $39, $36, $29, $3a, $8f, $20, $40, $43, $36, $34, $43, $4F, $53, $4D, $49, $4E, $20, $32, $30, $32, $32, $00, $00, $00
 
 *=$2000
-incbin "dino.spt"     , 1, 16, true
-*=$2400
-incbin "dinocolor.spt", 1, 16, true
+incbin "sprite.spt"     , 1, 40, true
 *=$3000
 incbin "tiles.cst", 0, 255
 *=$4000
@@ -125,12 +139,20 @@ playerAnim          byte 0
 playerSprite        byte spriteDinoRight
 
 *=$1000
-init            ldx #$3
+init            ldx #$ff
                 stx spriteEnable
-                ldx #0
-                stx sprite0C
-                ldx #13
-                stx sprite1C
+                lda #0
+                sta sprite0C
+                lda #13
+                sta sprite1C
+                setsprite 2, $b8, $82, 0, $A0
+                setsprite 3, $b8, $82, 3, $A4
+                setsprite 4, $68, $92, 0, $A1
+                setsprite 5, $68, $92, 10, $A5
+                setsprite 6, $38, $A2, 0, $A3
+                setsprite 7, $38, $A2, 9, $A7
+                ;setsprite 3, $d8, $a2, 0, $A2
+                ;setsprite 4, $d8, $a2, 10, $A6
                 ldx #5
                 stx $d021
                 ldx #0
