@@ -69,13 +69,7 @@ init            ldx #$3
                 copyBytes $3000, $d800, $03e8
                 copyBytes $33e8, $0400, $03e8
 
-loop            lda #0
-                sta $02
-                inc $d020
-wait_loop       inc $02
-                lda $02
-                cmp #8
-                bne wait_loop
+loop            lda #$fb
 raster          cmp $d012
                 bne raster
                 
@@ -178,9 +172,8 @@ player_draw     lda playerAnim ;animate walk
                 sta sprite0Y
                 ;sta sprite1Y
                 ;logic
-                dec $d020
-                dec $d020
-
+                lda #0
+                sta $d020
                 jmp loop
 
 copy            lda ($fb),Y
