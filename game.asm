@@ -15,6 +15,77 @@ defm copyBytes
                 ldy #0
                 jsr copy
 endm
+defm debug
+                ldx /1
+                txa
+                sta $02
+                lda #$80
+                and $02
+                lsr
+                lsr
+                lsr
+                lsr
+                lsr
+                lsr
+                lsr
+                sta 1024
+                txa
+                sta $02
+                lda #$40
+                and $02
+                lsr
+                lsr
+                lsr
+                lsr
+                lsr
+                lsr
+                sta 1025
+                txa
+                sta $02
+                lda #$20
+                and $02
+                lsr
+                lsr
+                lsr
+                lsr
+                lsr
+                sta 1026
+                txa
+                sta $02
+                lda #$10
+                and $02
+                lsr
+                lsr
+                lsr
+                lsr
+                sta 1027
+                txa
+                sta $02
+                lda #$08
+                and $02
+                lsr
+                lsr
+                lsr
+                sta 1028
+                txa
+                sta $02
+                lda #$04
+                and $02
+                lsr
+                lsr
+                sta 1029
+                txa
+                sta $02
+                lda #$02
+                and $02
+                lsr
+                sta 1030
+                txa
+                sta $02
+                lda #$01
+                and $02
+                sta 1031
+endm
 
 joystick2 = $dc00
 spriteEnable = $d015
@@ -36,17 +107,20 @@ playerMoveSpeed = 16
         BYTE    $20, $08, $0A, $00, $9E, $20, $28,  $34, $30, $39, $36, $29, $3a, $8f, $20, $40, $43, $36, $34, $43, $4F, $53, $4D, $49, $4E, $20, $32, $30, $32, $32, $00, $00, $00
 
 *=$2000
-incbin "sprites.spt", 1, 16, true
-*=$2800
-incbin "tiles.cst", 0, 255
+incbin "dino.spt"     , 1, 16, true
+*=$2400
+incbin "dinocolor.spt", 1, 16, true
 *=$3000
-incbin "levels.sdd", 1, 1
+incbin "tiles.cst", 0, 255
 *=$4000
+incbin "levels.sdd", 1, 1
+*=$5000
 playerX             byte 0
 playerY             byte 0
 playerState         byte 0
 playerMoveIncrement byte 0
 playerAnim          byte 0
+playerSprite        byte 0
 
 *=$1000
 init            ldx #$3
@@ -63,11 +137,11 @@ init            ldx #$3
                 stx $d021
                 ldx #0
                 stx $d020
-                ldx #26
+                ldx #$1c
                 stx $d018
 
-                copyBytes $3000, $d800, $03e8
-                copyBytes $33e8, $0400, $03e8
+                copyBytes $4000, $d800, $03e8
+                copyBytes $43e8, $0400, $03e8
 
 loop            lda #$fb
 raster          cmp $d012
@@ -130,6 +204,7 @@ player_update
                 jmp player_draw
 player_move     lda playerState
                 and #$f
+                inc playerAnim
 player_move_up  cmp #$1
                 bne player_move_dw
                 dec playerY
@@ -139,38 +214,39 @@ player_move_dw  cmp #$2
 player_move_lf  cmp #$4
                 bne player_move_rg
                 dec playerX
-                ldx #$82
-                stx sprite0P
-                ldx #$83
-                stx sprite1P
+                ldx #$88
+                stx playerSprite
 player_move_rg  cmp #$8
                 bne player_move_dec
                 inc playerX
                 ldx #$80
-                stx sprite0P
-                ldx #$81
-                stx sprite1P
+                stx playerSprite
 player_move_dec dec playerMoveIncrement
-                inc playerAnim
                 lda playerMoveIncrement
                 cmp #0
                 bne player_draw
                 lda playerState
                 and #$f0        ;clear player direction state
                 sta playerState
-player_draw     lda playerAnim ;animate walk 
+player_draw     lda playerAnim  ;animate walk 
+                lsr A           ; divide by 2
                 and #$7
-                ora #$80
+                clc
+                adc playerSprite
                 sta sprite0P
-                sta 1024
+                clc
+                adc #$10
+                sta sprite1P
                 lda playerX     ; player draw to sprite
-                adc #$17        ; offsetX
+                clc
+                adc #$18        ; offsetX
                 sta sprite0X
-                ;sta sprite1X
+                sta sprite1X
                 lda playerY
+                clc
                 adc #$31        ; offsetY
                 sta sprite0Y
-                ;sta sprite1Y
+                sta sprite1Y
                 ;logic
                 lda #0
                 sta $d020

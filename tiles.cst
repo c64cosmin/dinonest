@@ -10,18 +10,44 @@
   <character>
     <charcode>0</charcode>
     <chardata>
-      <data>0</data>
-      <data>2</data>
-      <data>32</data>
-      <data>9</data>
-      <data>0</data>
-      <data>64</data>
-      <data>2</data>
-      <data>16</data>
+      <data>255</data>
+      <data>129</data>
+      <data>129</data>
+      <data>129</data>
+      <data>129</data>
+      <data>129</data>
+      <data>129</data>
+      <data>255</data>
     </chardata>
   </character>
   <character>
     <charcode>1</charcode>
+    <chardata>
+      <data>255</data>
+      <data>129</data>
+      <data>189</data>
+      <data>189</data>
+      <data>189</data>
+      <data>189</data>
+      <data>129</data>
+      <data>255</data>
+    </chardata>
+  </character>
+  <character>
+    <charcode>2</charcode>
+    <chardata>
+      <data>1</data>
+      <data>32</data>
+      <data>4</data>
+      <data>65</data>
+      <data>8</data>
+      <data>0</data>
+      <data>66</data>
+      <data>8</data>
+    </chardata>
+  </character>
+  <character>
+    <charcode>3</charcode>
     <chardata>
       <data>0</data>
       <data>32</data>
@@ -34,7 +60,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>2</charcode>
+    <charcode>4</charcode>
     <chardata>
       <data>0</data>
       <data>0</data>
@@ -47,7 +73,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>3</charcode>
+    <charcode>5</charcode>
     <chardata>
       <data>0</data>
       <data>0</data>
