@@ -99,6 +99,8 @@ sprite1Y = $d003
 sprite1C = $d028
 
 playerMoveSpeed = 16
+spriteDinoRight = $80
+spriteDinoLeft = $88
 
 ; 10 SYS (4096):REM @c64cosmin 2022
 
@@ -120,15 +122,11 @@ playerY             byte 0
 playerState         byte 0
 playerMoveIncrement byte 0
 playerAnim          byte 0
-playerSprite        byte 0
+playerSprite        byte spriteDinoRight
 
 *=$1000
 init            ldx #$3
                 stx spriteEnable
-                ldx #$80
-                stx sprite0P
-                ldx #$81
-                stx sprite1P
                 ldx #0
                 stx sprite0C
                 ldx #13
@@ -214,12 +212,12 @@ player_move_dw  cmp #$2
 player_move_lf  cmp #$4
                 bne player_move_rg
                 dec playerX
-                ldx #$88
+                ldx #spriteDinoLeft
                 stx playerSprite
 player_move_rg  cmp #$8
                 bne player_move_dec
                 inc playerX
-                ldx #$80
+                ldx #spriteDinoRight
                 stx playerSprite
 player_move_dec dec playerMoveIncrement
                 lda playerMoveIncrement
