@@ -113,7 +113,7 @@ sprite1X = $d002
 sprite1Y = $d003
 sprite1C = $d028
 
-playerMoveSpeed = 16
+dinoMoveSpeed = 16
 spriteDinoRight = $80
 spriteDinoLeft = $88
 fruitBerry = $A0
@@ -131,12 +131,17 @@ incbin "tiles.cst", 0, 255
 *=$4000
 incbin "levels.sdd", 1, 1
 *=$5000
-playerX             byte 0
-playerY             byte 0
-playerState         byte 0
-playerMoveIncrement byte 0
-playerAnim          byte 0
-playerSprite        byte spriteDinoRight
+dinoX             byte 0
+dinoY             byte 0
+dinoState         byte 0
+dinoMoveIncrement byte 0
+dinoAnim          byte 0
+dinoSprite        byte spriteDinoRight
+dummy0              byte 0
+dummy1              byte 0
+
+*=$6000
+instancePointer     byte 0
 
 *=$1000
 init            ldx #$ff
@@ -145,124 +150,94 @@ init            ldx #$ff
                 sta sprite0C
                 lda #13
                 sta sprite1C
-                setsprite 2, $b8, $82, 0, $A0
-                setsprite 3, $b8, $82, 3, $A4
-                setsprite 4, $68, $92, 0, $A1
-                setsprite 5, $68, $92, 10, $A5
-                setsprite 6, $38, $A2, 0, $A3
-                setsprite 7, $38, $A2, 9, $A7
+                ;setsprite 2, $b8, $82, 0, $A0
+                ;setsprite 3, $b8, $82, 3, $A4
+                setsprite 4, $78, $82, 0, $A1
+                setsprite 5, $78, $82, 10, $A5
+                ;setsprite 6, $38, $A2, 0, $A3
+                ;setsprite 7, $38, $A2, 9, $A7
                 ;setsprite 3, $d8, $a2, 0, $A2
                 ;setsprite 4, $d8, $a2, 10, $A6
+                ldx #24
+                stx $d016
+                ldx #$1c
+                stx $d018
+                ldx #0
+                stx $d020
                 ldx #5
                 stx $d021
                 ldx #0
-                stx $d020
-                ldx #$1c
-                stx $d018
+                stx $d022
+                ldx #9
+                stx $d023
 
                 copyBytes $4000, $d800, $03e8
                 copyBytes $43e8, $0400, $03e8
 
 loop            lda #$fb
 raster          cmp $d012
-                bne raster
+                bne raster      ;wait for raster
                 
                 inc $d020
                 ;logic
-joy_moved       lda joystick2
-                eor #$f         ;xor joy state
-                and #$f
+                ldx #0                  ;pointer to player
+                lda dinoMoveIncrement,X ;check if player is not moving
                 cmp #0
-                beq player_update ;joy is not moved
-                lda playerState ;check if player is not moving
-                and #$f         ;if player not moving
-                cmp #$0
-                bne player_update ;if player not moving then slide
-player_slide_up lda joystick2
-                and #$1
-                cmp #$0
-                bne player_slide_dw
-                lda #$1
-                ora playerState
-                sta playerState
-                lda #playerMoveSpeed
-                sta playerMoveIncrement
-                jmp player_update
-player_slide_dw lda joystick2
-                and #$2
-                cmp #$0
-                bne player_slide_lf
-                lda #$2
-                ora playerState
-                sta playerState
-                lda #playerMoveSpeed
-                sta playerMoveIncrement
-                jmp player_update
-player_slide_lf lda joystick2
-                and #$4
-                cmp #$0
-                bne player_slide_rg
-                lda #$4
-                ora playerState
-                sta playerState
-                lda #playerMoveSpeed
-                sta playerMoveIncrement
-                jmp player_update
-player_slide_rg lda joystick2
-                and #$8
-                cmp #$0
-                bne player_update
-                lda #$8
-                ora playerState
-                sta playerState
-                lda #playerMoveSpeed
-                sta playerMoveIncrement
-player_update
-                lda playerMoveIncrement
+                bne player_update ;if player is moving then update
+                jsr joy_moved   ;load joystate in $02
+                lda $02
+                and #$f         ;ignore fire button
                 cmp #0
-                bne player_move
-                jmp player_draw
-player_move     lda playerState
+                beq player_update ;if joy is not moved then update
+                sta dinoState,X           ;else check joystick
+                lda #dinoMoveSpeed
+                sta dinoMoveIncrement,X
+player_update   lda dinoMoveIncrement
+                cmp #0
+                bne player_move         ;if didn't finish then update movement
+                jmp player_draw         ;else draw
+player_move     
+                inc dinoAnim
+                lda dinoState
                 and #$f
-                inc playerAnim
 player_move_up  cmp #$1
                 bne player_move_dw
-                dec playerY
+                dec dinoY
 player_move_dw  cmp #$2
                 bne player_move_lf
-                inc playerY
+                inc dinoY
 player_move_lf  cmp #$4
                 bne player_move_rg
-                dec playerX
-                ldx #spriteDinoLeft
-                stx playerSprite
+                dec dinoX
+                lda #spriteDinoLeft
+                sta dinoSprite
 player_move_rg  cmp #$8
                 bne player_move_dec
-                inc playerX
-                ldx #spriteDinoRight
-                stx playerSprite
-player_move_dec dec playerMoveIncrement
-                lda playerMoveIncrement
+                inc dinoX
+                lda #spriteDinoRight
+                sta dinoSprite
+player_move_dec dec dinoMoveIncrement
+                lda dinoMoveIncrement
                 cmp #0
                 bne player_draw
-                lda playerState
+                lda dinoState
                 and #$f0        ;clear player direction state
-                sta playerState
-player_draw     lda playerAnim  ;animate walk 
+                sta dinoState
+player_draw     lda dinoAnim  ;animate walk 
                 lsr A           ; divide by 2
                 and #$7
                 clc
-                adc playerSprite
+                adc dinoSprite
                 sta sprite0P
                 clc
                 adc #$10
                 sta sprite1P
-                lda playerX     ; player draw to sprite
+                lda dinoX     ; player draw to sprite
                 clc
-                adc #$18        ; offsetX
+                adc #$14        ; offsetX
                 sta sprite0X
                 sta sprite1X
-                lda playerY
+                lda dinoY
                 clc
                 adc #$31        ; offsetY
                 sta sprite0Y
@@ -271,6 +246,60 @@ player_draw     lda playerAnim  ;animate walk
                 lda #0
                 sta $d020
                 jmp loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;joystick routine
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;copies only one direction from the joystick to $02
+;;this can be used as direction control for one dino
+
+                ;logic for joystick control
+joy_moved       lda #0
+                sta $02         ;reset state
+                lda joystick2
+                eor #$f         ;xor joy state
+                and #$f
+                cmp #0
+                bne joy_was_moved ;joy is moved
+                rts               ;else return
+joy_was_moved   lda joystick2
+                and #$1
+                cmp #$0
+                bne joy_dw
+                lda #$1
+                ora $02
+                sta $02
+                rts
+joy_dw          lda joystick2
+                and #$2
+                cmp #$0
+                bne joy_lf
+                lda #$2
+                ora $02
+                sta $02
+                rts
+joy_lf          lda joystick2
+                and #$4
+                cmp #$0
+                bne joy_rg
+                lda #$4
+                ora $02
+                sta $02
+                rts
+joy_rg          lda joystick2
+                and #$8
+                cmp #$0
+                bne joy_return
+                lda #$8
+                ora $02
+                sta $02
+joy_return      rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;copy routine
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;copies bytes from $fb$fc to $fd$fe
+;;number of bytes stored in $02$03
 
 copy            lda ($fb),Y
                 sta ($fd),Y
