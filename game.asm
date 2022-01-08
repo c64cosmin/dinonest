@@ -144,6 +144,8 @@ incbin "levels.sdd", 1, 2
 *=$5000
 dinoX             byte 0
 dinoY             byte 0
+dinoFrontX        byte 0
+dinoFrontY        byte 0
 dinoState         byte 0
 dinoMoveIncrement byte 0
 dinoAnim          byte 0
@@ -153,6 +155,8 @@ dummy1            byte 0
 
 qdinoX             byte 128
 qdinoY             byte 64
+qdinoFrontX        byte 0
+qdinoFrontY        byte 0
 qdinoState         byte 0
 qdinoMoveIncrement byte 0
 qdinoAnim          byte 0
@@ -162,6 +166,8 @@ qdummy1            byte 0
 
 qqdinoX             byte 128
 qqdinoY             byte 64
+qqdinoFrontX        byte 0
+qqdinoFrontY        byte 0
 qqdinoState         byte 0
 qqdinoMoveIncrement byte 0
 qqdinoAnim          byte 0
@@ -171,6 +177,8 @@ qqdummy1            byte 0
 
 qqqdinoX             byte 128
 qqqdinoY             byte 64
+qqqdinoFrontX        byte 0
+qqqdinoFrontY        byte 0
 qqqdinoState         byte 0
 qqqdinoMoveIncrement byte 0
 qqqdinoAnim          byte 0
@@ -296,6 +304,7 @@ load_map_1      cmp #1
                 copyBytes $4bb8, $0400, $03e8
 logical_map     lda #0
                 sta $02                 ;i = 0; i < 240
+
                 lda #<logicMapAddr
                 sta $03
                 lda #>logicMapAddr
@@ -319,7 +328,7 @@ skip_set_solid  sta ($03,X)
                 lda #0
                 adc $04
                 sta $04                 ;increment with carry pointer $03,$04
-                lda #1
+                lda #2
                 clc
                 adc $05
                 sta $05
@@ -332,7 +341,6 @@ skip_set_solid  sta ($03,X)
                 cmp #240
                 bne loop_logic_map
                 rts
-                
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;dino instance update
@@ -348,12 +356,38 @@ dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
                 and #$f                 ;for movement
                 cmp #0                  ;is dino moved
                 beq dino_draw           ;if there is no control skip
-                lda #dinoMoveSpeed      ;else start animation
-                sta dinoMoveIncrement,X
+                                        ;else look for collision
+
                 lda dinoState,X         ;load state
                 and #$f0                ;drop movement
                 ora $02                 ;add control
                 sta dinoState,X         ;store state
+
+                lda dinoFrontY,X        ;adr = ypos
+                asl A
+                asl A                   ;multiply by 4
+                sta $03
+                clc
+                adc $03
+                adc $03
+                adc $03
+                adc $03
+                sta $03                 ;adr = ypos*4*5(y*20)
+
+                lda dinoFrontX,X        ;xpos
+                adc $03
+                sta $03                 ;adr = xpos + ypos*20
+
+                stx $04                 ;store X
+                ldx $03
+                lda logicMapAddr,X      ;load map property
+                ldx $04                 ;fetch X
+                cmp #0                  ;is tile free?
+                bne dino_draw           ;if not cannot move
+
+                lda #dinoMoveSpeed      ;else start animation
+                sta dinoMoveIncrement,X
+                
 dino_move       inc dinoAnim,X
                 lda dinoState,X
                 and #$f
@@ -374,12 +408,6 @@ dino_move_rg    cmp #directionRight
                 lda #spriteDinoRight
                 sta dinoSprite,X
 dino_move_dec   dec dinoMoveIncrement,X
-                lda dinoMoveIncrement,X
-                cmp #0
-                bne dino_draw
-                lda dinoState,X
-                and #$f0        ;clear dino direction state
-                sta dinoState,X
 dino_draw       lda dinoAnim,X  ;animate walk 
                 lsr A           ; divide by 2
                 and #$7
@@ -409,35 +437,53 @@ dino_draw       lda dinoAnim,X  ;animate walk
                 sta sprite0Y,Y
                 sta sprite1Y,Y
 
+                lda dinoState,X
+                and #$0f
+dino_f_up       cmp #directionUp
+                bne dino_f_dw
                 lda dinoY,X
-                and #$f0
-                lsr A           ;divide by 2
-                sta $03
-                clc
-                adc $03
-                clc
-                adc $03
-                clc
-                adc $03
-                clc
-                adc $03         ;multiply by 5
-                sta $03
-
+                lsr A
+                lsr A
+                lsr A
+                lsr A           ;divide by 16
+                tay
+                dey
+                tya
+                sta dinoFrontY,X
+dino_f_dw       cmp #directionDown
+                bne dino_f_lf
+                lda dinoY,X
+                lsr A
+                lsr A
+                lsr A
+                lsr A           ;divide by 16
+                tay
+                iny
+                tya
+                sta dinoFrontY,X
+dino_f_lf       cmp #directionLeft
+                bne dino_f_rg
                 lda dinoX,X
                 lsr A
                 lsr A
                 lsr A
                 lsr A           ;divide by 16
-                adc $03
-                sta $03
-
-                ldx $03
-                lda #1
-                sta $0400,X
-                
-                tax
-                lda #1
-                sta $0400,X
+                tay
+                dey
+                tya
+                sta dinoFrontX,X
+dino_f_rg       cmp #directionRight
+                bne dino_f_skip
+                lda dinoX,X
+                lsr A
+                lsr A
+                lsr A
+                lsr A           ;divide by 16
+                tay
+                iny
+                tya
+                sta dinoFrontX,X
+dino_f_skip
                 rts             ;return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
