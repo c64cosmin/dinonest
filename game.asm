@@ -131,10 +131,13 @@ fruitBerry = $A0
 
 *=$2000
 incbin "sprite.spt"     , 1, 40, true
+
 *=$3000
 incbin "tiles.cst", 0, 255
+
 *=$4000
-incbin "levels.sdd", 1, 1
+incbin "levels.sdd", 1, 2
+
 *=$5000
 dinoX             byte 0
 dinoY             byte 0
@@ -183,6 +186,8 @@ init            ldx #$ff
                 ;setsprite 7, $38, $A2, 9, $A7
                 ;setsprite 3, $d8, $a2, 0, $A2
                 ;setsprite 4, $d8, $a2, 10, $A6
+                ldx #$17
+                stx $d011
                 ldx #24
                 stx $d016
                 ldx #$1c
@@ -209,20 +214,22 @@ init            ldx #$ff
                 lda #0
                 sta $06
 
-                copyBytes $4000, $d800, $03e8
-                copyBytes $43e8, $0400, $03e8
+                copyBytes $43e8, $d800, $03e8
+                copyBytes $4bb8, $0400, $03e8
 
 loop            lda #$fb
 raster          cmp $d012
                 bne raster      ;wait for raster
                 
-                inc $d020
+                ;inc $d020
                 ;logic
                 ldx #0          ;joystick 2
                 jsr joy_moved   ;load joystate in $02
                 ldx #0          ;pointer to player
                 ldy #0          ;player draw to sprite 0,1
                 jsr dino_update ;dino update
+
+                jmp loop
 
                 ;ldx #1
                 ;jsr joy_moved
@@ -263,11 +270,10 @@ skip2           ldx #16
                 ldy #6
                 jsr dino_update
 
-                debug $06
-
                 ;logic
                 lda #0
                 sta $d020
+
                 jmp loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -341,9 +347,39 @@ dino_draw       lda dinoAnim,X  ;animate walk
                 sta sprite1X,Y
                 lda dinoY,X
                 clc
-                adc #$31        ; offsetY
+                adc #$35        ; offsetY
                 sta sprite0Y,Y
                 sta sprite1Y,Y
+
+                lda dinoY,X
+                and #$f0
+                lsr A           ;divide by 2
+                sta $03
+                clc
+                adc $03
+                clc
+                adc $03
+                clc
+                adc $03
+                clc
+                adc $03         ;multiply by 5
+                sta $03
+
+                lda dinoX,X
+                lsr A
+                lsr A
+                lsr A
+                lsr A           ;divide by 16
+                adc $03
+                sta $03
+
+                ldx $03
+                lda #1
+                sta $0400,X
+                
+                tax
+                lda #1
+                sta $0400,X
                 rts             ;return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
