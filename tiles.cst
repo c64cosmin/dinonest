@@ -385,7 +385,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>29</charcode>
+    <charcode>96</charcode>
     <chardata>
       <data>0</data>
       <data>0</data>
@@ -398,7 +398,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>30</charcode>
+    <charcode>97</charcode>
     <chardata>
       <data>0</data>
       <data>0</data>
@@ -411,7 +411,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>31</charcode>
+    <charcode>98</charcode>
     <chardata>
       <data>27</data>
       <data>26</data>
@@ -424,7 +424,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>32</charcode>
+    <charcode>99</charcode>
     <chardata>
       <data>228</data>
       <data>164</data>
@@ -437,7 +437,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>33</charcode>
+    <charcode>100</charcode>
     <chardata>
       <data>0</data>
       <data>20</data>
@@ -450,7 +450,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>34</charcode>
+    <charcode>101</charcode>
     <chardata>
       <data>0</data>
       <data>80</data>
@@ -463,7 +463,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>35</charcode>
+    <charcode>102</charcode>
     <chardata>
       <data>7</data>
       <data>7</data>
@@ -476,7 +476,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>36</charcode>
+    <charcode>103</charcode>
     <chardata>
       <data>208</data>
       <data>208</data>
@@ -489,7 +489,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>37</charcode>
+    <charcode>104</charcode>
     <chardata>
       <data>255</data>
       <data>255</data>
@@ -502,7 +502,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>38</charcode>
+    <charcode>105</charcode>
     <chardata>
       <data>255</data>
       <data>255</data>
@@ -515,7 +515,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>39</charcode>
+    <charcode>106</charcode>
     <chardata>
       <data>208</data>
       <data>208</data>
@@ -528,7 +528,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>40</charcode>
+    <charcode>107</charcode>
     <chardata>
       <data>7</data>
       <data>7</data>
@@ -541,7 +541,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>41</charcode>
+    <charcode>108</charcode>
     <chardata>
       <data>208</data>
       <data>208</data>
@@ -554,7 +554,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>42</charcode>
+    <charcode>109</charcode>
     <chardata>
       <data>7</data>
       <data>7</data>
@@ -567,7 +567,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>43</charcode>
+    <charcode>110</charcode>
     <chardata>
       <data>0</data>
       <data>80</data>
@@ -580,7 +580,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>44</charcode>
+    <charcode>111</charcode>
     <chardata>
       <data>255</data>
       <data>255</data>
@@ -595,14 +595,14 @@
   <character>
     <charcode>45</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
     </chardata>
   </character>
 </charset>
