@@ -141,19 +141,39 @@ dinoState         byte 0
 dinoMoveIncrement byte 0
 dinoAnim          byte 0
 dinoSprite        byte spriteDinoRight
-dummy0            byte 0
+dinoColor         byte 13
 dummy1            byte 0
 
-*=$6000
-instancePointer     byte 0
+qdinoX             byte 80
+qdinoY             byte 64
+qdinoState         byte 0
+qdinoMoveIncrement byte 0
+qdinoAnim          byte 0
+qdinoSprite        byte spriteDinoRight
+qdinoSpriteColor   byte 10
+qdummy1            byte 0
+
+qqdinoX             byte 80
+qqdinoY             byte 64
+qqdinoState         byte 0
+qqdinoMoveIncrement byte 0
+qqdinoAnim          byte 0
+qqdinoSprite        byte spriteDinoRight
+qqdinoSpriteColor   byte 7
+qqdummy1            byte 0
+
+qqqdinoX             byte 80
+qqqdinoY             byte 64
+qqqdinoState         byte 0
+qqqdinoMoveIncrement byte 0
+qqqdinoAnim          byte 0
+qqqdinoSprite        byte spriteDinoRight
+qqqdinoSpriteColor   byte 14
+qqqdummy1            byte 0
 
 *=$1000
 init            ldx #$ff
                 stx spriteEnable
-                lda #0
-                sta sprite0C
-                lda #13
-                sta sprite1C
                 setsprite 2, $b8, $82, 0, $A0
                 setsprite 3, $b8, $82, 3, $A4
                 setsprite 4, $78, $82, 0, $A1
@@ -175,9 +195,18 @@ init            ldx #$ff
                 ldx #9
                 stx $d023
 
+                ;random generator
+                LDA #$6F
+                LDY #$81
+                LDX #$FF
+                STA $D413
+                STY $D412
+                STX $D40E
+                STX $D40F
+                STX $D414
+
                 copyBytes $4000, $d800, $03e8
                 copyBytes $43e8, $0400, $03e8
-                copyBytes $5000, $5008, $0008
 
 loop            lda #$fb
 raster          cmp $d012
@@ -188,12 +217,27 @@ raster          cmp $d012
                 ldx #0          ;joystick 2
                 jsr joy_moved   ;load joystate in $02
                 ldx #0          ;pointer to player
+                ldy #0          ;player draw to sprite 0,1
                 jsr dino_update ;dino update
 
-                ldx #1
-                jsr joy_moved
+                ;ldx #1
+                ;jsr joy_moved
+                
+                jsr random_control
                 ldx #8
+                ldy #2
                 jsr dino_update
+
+                jsr random_control
+                ldx #16
+                ldy #4
+                jsr dino_update
+
+                jsr random_control
+                ldx #24
+                ldy #6
+                jsr dino_update
+
 
                 ;logic
                 lda #0
@@ -203,7 +247,8 @@ raster          cmp $d012
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;dino instance update
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;set register X to pointer
+;;register X to pointer
+;;register Y is sprite ID
 ;;$02 controls movement of dino
 
 dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
@@ -250,21 +295,50 @@ dino_draw       lda dinoAnim,X  ;animate walk
                 and #$7
                 clc
                 adc dinoSprite,X
-                sta sprite0P
+                sta sprite0P,Y
                 clc
                 adc #$10
-                sta sprite1P
+                sta sprite1P,Y
+
+                lda #0          ;black outline
+                sta sprite0C,Y
+                lda dinoColor,X
+                sta sprite1C,Y  ;color outline
+
+                tya
+                asl A
+                tay             ;multiply Y with 2
                 lda dinoX,X     ; player draw to sprite
                 clc
                 adc #$14        ; offsetX
-                sta sprite0X
-                sta sprite1X
+                sta sprite0X,Y
+                sta sprite1X,Y
                 lda dinoY,X
                 clc
                 adc #$31        ; offsetY
-                sta sprite0Y
-                sta sprite1Y
+                sta sprite0Y,Y
+                sta sprite1Y,Y
                 rts             ;return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;random control routine
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;will return random direction control to $02
+
+random_control  lda #1
+                sta $02
+                lda $d41b
+                and #3
+                cmp #0
+                beq skip_random
+shift_random    asl $02
+                tax
+                dex
+                txa
+                cmp #0
+                bne shift_random
+skip_random     rts
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;joystick routine
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
