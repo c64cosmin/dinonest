@@ -113,6 +113,7 @@ sprite1X = $d002
 sprite1Y = $d003
 sprite1C = $d028
 
+randomByte      = $D41B
 directionUp     = 1
 directionDown   = 2
 directionLeft   = 4
@@ -144,7 +145,7 @@ dinoSprite        byte spriteDinoRight
 dinoColor         byte 13
 dummy1            byte 0
 
-qdinoX             byte 80
+qdinoX             byte 128
 qdinoY             byte 64
 qdinoState         byte 0
 qdinoMoveIncrement byte 0
@@ -153,7 +154,7 @@ qdinoSprite        byte spriteDinoRight
 qdinoSpriteColor   byte 10
 qdummy1            byte 0
 
-qqdinoX             byte 80
+qqdinoX             byte 128
 qqdinoY             byte 64
 qqdinoState         byte 0
 qqdinoMoveIncrement byte 0
@@ -162,7 +163,7 @@ qqdinoSprite        byte spriteDinoRight
 qqdinoSpriteColor   byte 7
 qqdummy1            byte 0
 
-qqqdinoX             byte 80
+qqqdinoX             byte 128
 qqqdinoY             byte 64
 qqqdinoState         byte 0
 qqqdinoMoveIncrement byte 0
@@ -205,6 +206,9 @@ init            ldx #$ff
                 STX $D40F
                 STX $D414
 
+                lda #0
+                sta $06
+
                 copyBytes $4000, $d800, $03e8
                 copyBytes $43e8, $0400, $03e8
 
@@ -223,13 +227,34 @@ raster          cmp $d012
                 ;ldx #1
                 ;jsr joy_moved
                 
+                lda #0
+                sta $02
+                lda randomByte
+                and #7
+                cmp #0
+                bne skip0
+
                 jsr random_control
-                ldx #8
+skip0           ldx #8
                 ldy #2
                 jsr dino_update
 
-                jsr random_control
-                ldx #16
+                lda #0
+                sta $02
+                lda $06
+                cmp #0
+                beq skip1
+                dec $06
+                jmp skip2
+skip1           lda randomByte
+                and #$3f
+                cmp #0
+                bne skip3
+                lda randomByte
+                sta $06
+                jmp skip2
+skip3           jsr random_control
+skip2           ldx #16
                 ldy #4
                 jsr dino_update
 
@@ -238,6 +263,7 @@ raster          cmp $d012
                 ldy #6
                 jsr dino_update
 
+                debug $06
 
                 ;logic
                 lda #0
@@ -327,7 +353,7 @@ dino_draw       lda dinoAnim,X  ;animate walk
 
 random_control  lda #1
                 sta $02
-                lda $d41b
+                lda randomByte
                 and #3
                 cmp #0
                 beq skip_random
