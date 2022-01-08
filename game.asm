@@ -102,6 +102,7 @@ defm setsprite
                 sta $d001,X
 endm
 
+screenChars = $0400
 joystick = $dc00
 spriteEnable = $d015
 sprite0P = $07f8
@@ -112,6 +113,8 @@ sprite1P = $07f9
 sprite1X = $d002
 sprite1Y = $d003
 sprite1C = $d028
+
+logicMapAddr = $6000
 
 randomByte      = $D41B
 directionUp     = 1
@@ -178,10 +181,10 @@ qqqdummy1            byte 0
 *=$1000
 init            ldx #$ff
                 stx spriteEnable
-                setsprite 2, $b8, $82, 0, $A0
-                setsprite 3, $b8, $82, 3, $A4
-                setsprite 4, $78, $82, 0, $A1
-                setsprite 5, $78, $82, 10, $A5
+                ;setsprite 2, $b8, $82, 0, $A0
+                ;setsprite 3, $b8, $82, 3, $A4
+                ;setsprite 4, $78, $82, 0, $A1
+                ;setsprite 5, $78, $82, 10, $A5
                 ;setsprite 6, $38, $A2, 0, $A3
                 ;setsprite 7, $38, $A2, 9, $A7
                 ;setsprite 3, $d8, $a2, 0, $A2
@@ -214,8 +217,8 @@ init            ldx #$ff
                 lda #0
                 sta $06
 
-                copyBytes $43e8, $d800, $03e8
-                copyBytes $4bb8, $0400, $03e8
+                ldx #0
+                jsr load_map
 
 loop            lda #$fb
 raster          cmp $d012
@@ -275,6 +278,61 @@ skip2           ldx #16
                 sta $d020
 
                 jmp loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;load map
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;register X to map index
+
+load_map        txa
+                cmp #0
+                bne load_map_1
+                copyBytes $4000, $d800, $03e8   ;map 0
+                copyBytes $47d0, $0400, $03e8
+                jmp logical_map
+load_map_1      cmp #1
+                bne load_map_1
+                copyBytes $43e8, $d800, $03e8   ;map 1
+                copyBytes $4bb8, $0400, $03e8
+logical_map     lda #0
+                sta $02                 ;i = 0; i < 240
+                lda #<logicMapAddr
+                sta $03
+                lda #>logicMapAddr
+                sta $04                 ;pointer to logicMapAddr
+                lda #<screenChars
+                sta $05
+                lda #>screenChars
+                sta $06
+                ldx #0
+loop_logic_map  lda ($05,X)
+                and #$60                ;solid tile %x11xxxxx
+                cmp #$60
+                ldy #0
+                bne skip_set_solid
+                ldy #1
+skip_set_solid  sta ($03,X)
+                lda #1
+                clc
+                adc $03
+                sta $03
+                lda #0
+                adc $04
+                sta $04                 ;increment with carry pointer $03,$04
+                lda #1
+                clc
+                adc $05
+                sta $05
+                lda #0
+                adc $06
+                sta $06                 ;increment with carry pointer $05,$06
+
+                inc $02
+                lda $02
+                cmp #240
+                bne loop_logic_map
+                rts
+                
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;dino instance update
