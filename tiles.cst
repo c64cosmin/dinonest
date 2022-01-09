@@ -385,6 +385,19 @@
     </chardata>
   </character>
   <character>
+    <charcode>45</charcode>
+    <chardata>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+      <data>255</data>
+    </chardata>
+  </character>
+  <character>
     <charcode>96</charcode>
     <chardata>
       <data>0</data>
@@ -593,7 +606,7 @@
     </chardata>
   </character>
   <character>
-    <charcode>45</charcode>
+    <charcode>112</charcode>
     <chardata>
       <data>255</data>
       <data>255</data>

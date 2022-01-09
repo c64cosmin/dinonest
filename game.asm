@@ -151,7 +151,6 @@ dinoMoveIncrement byte 0
 dinoAnim          byte 0
 dinoSprite        byte spriteDinoRight
 dinoColor         byte 13
-dummy1            byte 0
 
 qdinoX             byte 128
 qdinoY             byte 64
@@ -162,7 +161,6 @@ qdinoMoveIncrement byte 0
 qdinoAnim          byte 0
 qdinoSprite        byte spriteDinoRight
 qdinoSpriteColor   byte 10
-qdummy1            byte 0
 
 qqdinoX             byte 128
 qqdinoY             byte 64
@@ -173,7 +171,6 @@ qqdinoMoveIncrement byte 0
 qqdinoAnim          byte 0
 qqdinoSprite        byte spriteDinoRight
 qqdinoSpriteColor   byte 7
-qqdummy1            byte 0
 
 qqqdinoX             byte 128
 qqqdinoY             byte 64
@@ -184,7 +181,6 @@ qqqdinoMoveIncrement byte 0
 qqqdinoAnim          byte 0
 qqqdinoSprite        byte spriteDinoRight
 qqqdinoSpriteColor   byte 14
-qqqdummy1            byte 0
 
 *=$1000
 init            ldx #$ff
@@ -232,15 +228,13 @@ loop            lda #$fb
 raster          cmp $d012
                 bne raster      ;wait for raster
                 
-                ;inc $d020
+                inc $d020
                 ;logic
                 ldx #0          ;joystick 2
                 jsr joy_moved   ;load joystate in $02
                 ldx #0          ;pointer to player
                 ldy #0          ;player draw to sprite 0,1
                 jsr dino_update ;dino update
-
-                jmp loop
 
                 ;ldx #1
                 ;jsr joy_moved
@@ -253,7 +247,7 @@ raster          cmp $d012
                 bne skip0
 
                 jsr random_control
-skip0           ldx #8
+skip0           ldx #9
                 ldy #2
                 jsr dino_update
 
@@ -272,12 +266,12 @@ skip1           lda randomByte
                 sta $06
                 jmp skip2
 skip3           jsr random_control
-skip2           ldx #16
+skip2           ldx #18
                 ldy #4
                 jsr dino_update
 
                 jsr random_control
-                ldx #24
+                ldx #27
                 ldy #6
                 jsr dino_update
 
@@ -299,36 +293,31 @@ load_map        txa
                 copyBytes $47d0, $0400, $03e8
                 jmp logical_map
 load_map_1      cmp #1
-                bne load_map_1
+                bne load_map_2
                 copyBytes $43e8, $d800, $03e8   ;map 1
                 copyBytes $4bb8, $0400, $03e8
+load_map_2
 logical_map     lda #0
                 sta $02                 ;i = 0; i < 240
+                sta $03                 ;j = 0
 
-                lda #<logicMapAddr
-                sta $03
-                lda #>logicMapAddr
-                sta $04                 ;pointer to logicMapAddr
                 lda #<screenChars
                 sta $05
                 lda #>screenChars
-                sta $06
+                sta $06                 ;pointer to screen chars
+loop_logic_map  lda #0
+                ldx $02
+                sta logicMapAddr,X
                 ldx #0
-loop_logic_map  lda ($05,X)
+                lda ($05,X)
                 and #$60                ;solid tile %x11xxxxx
                 cmp #$60
-                ldy #0
                 bne skip_set_solid
-                ldy #1
-skip_set_solid  sta ($03,X)
                 lda #1
-                clc
-                adc $03
-                sta $03
-                lda #0
-                adc $04
-                sta $04                 ;increment with carry pointer $03,$04
-                lda #2
+                ldx $02
+                sta logicMapAddr,X
+
+skip_set_solid  lda #2                  ;pointer += 2
                 clc
                 adc $05
                 sta $05
@@ -336,10 +325,25 @@ skip_set_solid  sta ($03,X)
                 adc $06
                 sta $06                 ;increment with carry pointer $05,$06
 
-                inc $02
+                inc $03                 ;j+=2
+                inc $03
+                lda $03
+                cmp #40
+                bne skip_j40            ;if j==40; pointer+=40
+                lda #40
+                clc
+                adc $05
+                sta $05
+                lda #0
+                adc $06
+                sta $06
+                lda #0
+                sta $03                 ;j=0
+skip_j40
+                inc $02                 ;i++
                 lda $02
                 cmp #240
-                bne loop_logic_map
+                bne loop_logic_map      ;reached end of logical map i < 240
                 rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -355,7 +359,7 @@ dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
                 lda $02                 ;else check control
                 and #$f                 ;for movement
                 cmp #0                  ;is dino moved
-                beq dino_draw           ;if there is no control skip
+                beq dino_draw_hook      ;if there is no control skip
                                         ;else look for collision
 
                 lda dinoState,X         ;load state
@@ -363,6 +367,33 @@ dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
                 ora $02                 ;add control
                 sta dinoState,X         ;store state
 
+                lda dinoX,X             ;compute front position
+                lsr A
+                lsr A
+                lsr A
+                lsr A
+                sta dinoFrontX,X
+                lda dinoY,X
+                lsr A
+                lsr A
+                lsr A
+                lsr A
+                sta dinoFrontY,X        ;refresh front position
+                lda dinoState,X
+                and #$0f
+dino_f_up       cmp #directionUp
+                bne dino_f_dw
+                dec dinoFrontY,X
+dino_f_dw       cmp #directionDown
+                bne dino_f_lf
+                inc dinoFrontY,X
+dino_f_lf       cmp #directionLeft
+                bne dino_f_rg
+                dec dinoFrontX,X
+dino_f_rg       cmp #directionRight
+                bne dino_f_skip
+                inc dinoFrontX,X        ;end compute front position
+dino_f_skip
                 lda dinoFrontY,X        ;adr = ypos
                 asl A
                 asl A                   ;multiply by 4
@@ -372,7 +403,7 @@ dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
                 adc $03
                 adc $03
                 adc $03
-                sta $03                 ;adr = ypos*4*5(y*20)
+                sta $03                 ;adr = ypos*4*5 == (y*20)
 
                 lda dinoFrontX,X        ;xpos
                 adc $03
@@ -387,6 +418,8 @@ dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
 
                 lda #dinoMoveSpeed      ;else start animation
                 sta dinoMoveIncrement,X
+                jmp dino_move
+dino_draw_hook  jmp dino_draw           ;jump hook
                 
 dino_move       inc dinoAnim,X
                 lda dinoState,X
@@ -437,53 +470,6 @@ dino_draw       lda dinoAnim,X  ;animate walk
                 sta sprite0Y,Y
                 sta sprite1Y,Y
 
-                lda dinoState,X
-                and #$0f
-dino_f_up       cmp #directionUp
-                bne dino_f_dw
-                lda dinoY,X
-                lsr A
-                lsr A
-                lsr A
-                lsr A           ;divide by 16
-                tay
-                dey
-                tya
-                sta dinoFrontY,X
-dino_f_dw       cmp #directionDown
-                bne dino_f_lf
-                lda dinoY,X
-                lsr A
-                lsr A
-                lsr A
-                lsr A           ;divide by 16
-                tay
-                iny
-                tya
-                sta dinoFrontY,X
-dino_f_lf       cmp #directionLeft
-                bne dino_f_rg
-                lda dinoX,X
-                lsr A
-                lsr A
-                lsr A
-                lsr A           ;divide by 16
-                tay
-                dey
-                tya
-                sta dinoFrontX,X
-dino_f_rg       cmp #directionRight
-                bne dino_f_skip
-                lda dinoX,X
-                lsr A
-                lsr A
-                lsr A
-                lsr A           ;divide by 16
-                tay
-                iny
-                tya
-                sta dinoFrontX,X
-dino_f_skip
                 rts             ;return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
