@@ -3,7 +3,7 @@
   <FileVersion>2</FileVersion>
   <BK1>07</BK1>
   <BK2>97</BK2>
-  <Col3>67</Col3>
+  <Col3>27</Col3>
   <Reversed>False</Reversed>
   <Multicolour>True</Multicolour>
   <Uppercase>True</Uppercase>
@@ -432,21 +432,21 @@
       <data>27</data>
       <data>30</data>
       <data>27</data>
-      <data>30</data>
-      <data>121</data>
+      <data>6</data>
+      <data>1</data>
     </chardata>
   </character>
   <character>
     <charcode>99</charcode>
     <chardata>
       <data>228</data>
-      <data>164</data>
-      <data>116</data>
+      <data>148</data>
+      <data>180</data>
       <data>228</data>
       <data>164</data>
       <data>164</data>
-      <data>169</data>
-      <data>153</data>
+      <data>208</data>
+      <data>64</data>
     </chardata>
   </character>
   <character>
@@ -616,6 +616,32 @@
       <data>255</data>
       <data>255</data>
       <data>255</data>
+    </chardata>
+  </character>
+  <character>
+    <charcode>113</charcode>
+    <chardata>
+      <data>26</data>
+      <data>26</data>
+      <data>30</data>
+      <data>27</data>
+      <data>26</data>
+      <data>22</data>
+      <data>27</data>
+      <data>26</data>
+    </chardata>
+  </character>
+  <character>
+    <charcode>114</charcode>
+    <chardata>
+      <data>164</data>
+      <data>164</data>
+      <data>180</data>
+      <data>228</data>
+      <data>164</data>
+      <data>180</data>
+      <data>228</data>
+      <data>180</data>
     </chardata>
   </character>
 </charset>
