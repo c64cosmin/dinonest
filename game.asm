@@ -143,7 +143,7 @@ incbin "tiles.cst", 0, 255
 incbin "levels.sdd", 1, 2
 
 *=$5000
-dinoX             byte 128
+dinoX             byte 96
 dinoY             byte 64
 dinoMapAddr       byte 0
 dinoState         byte 0
@@ -152,7 +152,7 @@ dinoAnim          byte 0
 dinoSprite        byte spriteDinoRight
 dinoColor         byte 13
 
-qdinoX             byte 144
+qdinoX             byte 112
 qdinoY             byte 64
 qdinoMapAddr       byte 0
 qdinoState         byte 0
@@ -161,7 +161,7 @@ qdinoAnim          byte 0
 qdinoSprite        byte spriteDinoRight
 qdinoSpriteColor   byte 10
 
-qqdinoX             byte 170
+qqdinoX             byte 128
 qqdinoY             byte 64
 qqdinoMapAddr       byte 0
 qqdinoState         byte 0
@@ -170,7 +170,7 @@ qqdinoAnim          byte 0
 qqdinoSprite        byte spriteDinoRight
 qqdinoSpriteColor   byte 7
 
-qqqdinoX             byte 186
+qqqdinoX             byte 144
 qqqdinoY             byte 64
 qqqdinoMapAddr       byte 0
 qqqdinoState         byte 0
@@ -228,36 +228,15 @@ raster          cmp $d012
 
                 ;ldx #1
                 ;jsr joy_moved
-                
-                lda #0
-                sta $02
-                lda randomByte
-                and #7
-                cmp #0
-                bne skip0
 
                 jsr random_control
-skip0           ldx #8
+                ldx #8
                 ldy #2
                 sty $04
                 jsr dino_update
 
-                lda #0
-                sta $02
-                lda $06
-                cmp #0
-                beq skip1
-                dec $06
-                jmp skip2
-skip1           lda randomByte
-                and #$3f
-                cmp #0
-                bne skip3
-                lda randomByte
-                sta $06
-                jmp skip2
-skip3           jsr random_control
-skip2           ldx #16
+                jsr random_control
+                ldx #16
                 ldy #4
                 sty $04
                 jsr dino_update
@@ -272,7 +251,7 @@ skip2           ldx #16
                 lda #0
                 sta $d020
 
-                jsr dbg_map
+                ;jsr dbg_map
 
                 jmp loop
 
