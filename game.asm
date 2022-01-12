@@ -144,6 +144,7 @@ incbin "levels.sdd", 1, 2
 
 *=$5000
 dinoX             byte 96
+dinoXHi           byte 0
 dinoY             byte 64
 dinoMapAddr       byte 0
 dinoState         byte 0
@@ -153,6 +154,7 @@ dinoSprite        byte spriteDinoRight
 dinoColor         byte 13
 
 qdinoX             byte 112
+qdinoXHi           byte 0
 qdinoY             byte 64
 qdinoMapAddr       byte 0
 qdinoState         byte 0
@@ -162,6 +164,7 @@ qdinoSprite        byte spriteDinoRight
 qdinoSpriteColor   byte 10
 
 qqdinoX             byte 128
+qqdinoXHi           byte 0
 qqdinoY             byte 64
 qqdinoMapAddr       byte 0
 qqdinoState         byte 0
@@ -171,6 +174,7 @@ qqdinoSprite        byte spriteDinoRight
 qqdinoSpriteColor   byte 7
 
 qqqdinoX             byte 144
+qqqdinoXHi           byte 0
 qqqdinoY             byte 64
 qqqdinoMapAddr       byte 0
 qqqdinoState         byte 0
@@ -230,19 +234,19 @@ raster          cmp $d012
                 ;jsr joy_moved
 
                 jsr random_control
-                ldx #8
+                ldx #9
                 ldy #2
                 sty $04
                 jsr dino_update
 
                 jsr random_control
-                ldx #16
+                ldx #18
                 ldy #4
                 sty $04
                 jsr dino_update
 
                 jsr random_control
-                ldx #24
+                ldx #27
                 ldy #6
                 sty $04
                 jsr dino_update
@@ -251,7 +255,7 @@ raster          cmp $d012
                 lda #0
                 sta $d020
 
-                ;jsr dbg_map
+                jsr dbg_map
 
                 jmp loop
 
@@ -420,26 +424,9 @@ dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
                 ldy $03                 ;load front position
                 lda #1
                 sta logicMapAddr,Y      ;mark place as occupied
-                
-dino_move       inc dinoAnim,X
-                lda dinoState,X
-                and #$f
-dino_move_up    cmp #directionUp
-                bne dino_move_dw
-                dec dinoY,X
-dino_move_dw    cmp #directionDown
-                bne dino_move_lf
-                inc dinoY,X
-dino_move_lf    cmp #directionLeft
-                bne dino_move_rg
-                dec dinoX,X
-                lda #spriteDinoLeft
-                sta dinoSprite,X
-dino_move_rg    cmp #directionRight
-                bne dino_move_dec
-                inc dinoX,X
-                lda #spriteDinoRight
-                sta dinoSprite,X
+
+dino_move       jsr dino_mv_rtn
+
 dino_move_dec   dec dinoMoveIncrement,X
                 lda dinoMoveIncrement,X
                 cmp #0
@@ -467,17 +454,59 @@ dino_draw       ldy $04
 
                 tya
                 asl A
-                tay             ;multiply Y with 2
-                lda dinoX,X     ; player draw to sprite
-                clc
-                adc #$14        ; offsetX
-                sta sprite0X,Y
-                sta sprite1X,Y
+                tay             ;multiply Y register with 2
                 lda dinoY,X
                 clc
                 adc #$35        ; offsetY
                 sta sprite0Y,Y
                 sta sprite1Y,Y
+
+                lda dinoX,X
+                sta $03
+                lda dinoXHi,X
+                sta $04
+
+                lda #$14        ; offsetX
+                clc
+                adc $03
+                sta $03
+                lda #0
+                adc $04
+                sta $04
+                lda $03
+                sta sprite0X,Y
+                sta sprite1X,Y
+                                ;high part of X position
+
+                lda $04
+                asl $04
+                ora $04
+                sta $04         ;double the bits in hi part
+                lda #3
+                sta $06         ;mask
+                sty $05
+                lsr $05         ;each dino has two sprites
+                lsr $05         ;divide back Yreg with 2
+                lda $05         ;sprite Xhi
+                cmp #0
+                beq dino_skip_xhi
+dino_xhi        asl $04
+                asl $04
+                asl $06
+                asl $06
+                dec $05
+                lda $05
+                cmp #0
+                bne dino_xhi
+dino_skip_xhi   lda $06         ;mask
+                eor #$ff        ;invert
+                sta $06
+                lda $d010
+                and $06         ;remove bit
+                sta $d010
+                lda $04
+                ora $d010       ;set bit
+                sta $d010
 
                 rts             ;return
 
@@ -498,8 +527,17 @@ dino_addr       lda dinoY,X             ;adr = ypos
                 lsr A
                 lsr A
                 lsr A                   ;divide by 16
+                clc
                 adc dinoMapAddr,X
-                sta dinoMapAddr,X       ;adr = xpos + ypos*20
+                sta dinoMapAddr,X
+                lda dinoXHi,X
+                cmp #0
+                beq dino_addr_nohi
+                lda #$10                ;0x100 shifted by 4 to right = 0x10
+                clc
+                adc dinoMapAddr,X
+                sta dinoMapAddr,X
+dino_addr_nohi  lda dinoMapAddr,X       ;adr = xpos + ypos*20
                 sta $03                 ;also hold this for frontAddr
 
                 lda dinoState,X
@@ -523,6 +561,42 @@ dino_f_rg       cmp #directionRight
                 bne dino_f_end
                 inc $03
 dino_f_end      rts
+
+
+dino_mv_rtn     inc dinoAnim,X
+                lda dinoState,X
+                and #$f
+dino_move_up    cmp #directionUp
+                bne dino_move_dw
+                dec dinoY,X
+dino_move_dw    cmp #directionDown
+                bne dino_move_lf
+                inc dinoY,X
+dino_move_lf    cmp #directionLeft
+                bne dino_move_rg
+                lda dinoX,X
+                sec
+                sbc #1
+                sta dinoX,X
+                lda dinoXHi,X
+                sbc #0
+                sta dinoXHi,X
+                lda #spriteDinoLeft
+                sta dinoSprite,X
+                jmp dino_move_skip
+dino_move_rg    cmp #directionRight
+                bne dino_move_skip
+                lda #1
+                clc
+                adc dinoX,X
+                sta dinoX,X
+                lda #0
+                adc dinoXHi,X
+                sta dinoXHi,X
+                lda #spriteDinoRight
+                sta dinoSprite,X
+
+dino_move_skip  rts
                                         ;end compute front position
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
