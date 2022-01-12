@@ -255,7 +255,7 @@ raster          cmp $d012
                 lda #0
                 sta $d020
 
-                jsr dbg_map
+                ;jsr dbg_map
 
                 jmp loop
 
