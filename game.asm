@@ -148,7 +148,7 @@ dinoX             byte 96
 dinoXHi           byte 0
 dinoY             byte 64
 dinoMapAddr       byte 0
-dinoState         byte isPlayer
+dinoState         byte 0
 dinoMoveIncrement byte 0
 dinoAnim          byte 0
 dinoSprite        byte spriteDinoRight
@@ -221,7 +221,7 @@ init            ldx #$ff
 loop            lda #$fb
 raster          cmp $d012
                 bne raster      ;wait for raster
-                
+
                 inc $d020
                 ;logic
                 ldx #0          ;joystick 2
@@ -235,7 +235,7 @@ raster          cmp $d012
                 lda #0
                 sta $d020
 
-                ;jsr dbg_map
+                jsr dbg_map
 
                 jmp loop
                 ;ldx #1
@@ -348,14 +348,14 @@ dbg_map         lda #0
                 sta $fb
                 lda #>colorRam
                 sta $fc                 ;pointer to screen chars
-                                
+                
 loop_dbg_map    ldx $02
                 lda logicMapAddr,X
                 ldx #0
                 sta ($fb,X)
                 lda #1
                 sta ($05,X)
-                
+
                 lda #2                  ;pointer += 2
                 clc
                 adc $05
@@ -423,9 +423,14 @@ dino_ctrl       lda dinoState,X         ;load state
                 ora $02                 ;add control
                 sta dinoState,X         ;store state
 
+                jsr dino_addr
+
                 jsr dino_map_move
 
-                jsr dino_addr
+                lda dinoState,X
+                and #dinoMapMove
+                cmp #dinoMapMove
+                beq dino_move
 
                 ldy $03                 ;$03 next position map addr
                 lda logicMapAddr,Y      ;load map property
@@ -445,7 +450,17 @@ dino_move_dec   dec dinoMoveIncrement,X
                 cmp #0
                 bne dino_draw
                                         ;clean up positions on map
-                lda #0
+
+                lda dinoState,X
+                and #dinoMapMove
+                cmp #dinoMapMove
+                bne dino_nrml_clean     ;if not map move
+
+                lda dinoState,X
+                and #$7f
+                sta dinoState,X
+
+dino_nrml_clean lda #0
                 ldy dinoMapAddr,X
                 sta logicMapAddr,Y      ;clean current position
 
@@ -615,20 +630,87 @@ dino_map_move   lda dinoState,X
                 and #$0f
                 cmp #directionLeft
                 bne dino_map_rg
+                lda dinoXHi,X
+                cmp #0
+                bne dino_map_rg
                 lda dinoX,X
                 cmp #0
                 bne dino_map_rg
-                
-                lda dinoX,X
-                clc
-                adc #32
-                sta dinoX,X
 
-                debug dinoState
-                
+                lda #$01
+                sta dinoXHi,X
+                lda #$40
+                sta dinoX,X             ;set dino to the right
 
-dino_map_rg
+                lda #dinoMoveSpeed      ;start animation
+                sta dinoMoveIncrement,X
+
+                lda dinoState,X
+                ora #dinoMapMove
+                sta dinoState,X         ;mark dino as transition
+
                 rts
+
+dino_map_rg     lda dinoState,X
+                and #$0f
+                cmp #directionRight
+                bne dino_map_up
+                lda dinoXHi,X
+                cmp #$01
+                bne dino_map_up
+                lda dinoX,X
+                cmp #$30
+                bne dino_map_up
+
+                lda #$ff
+                sta dinoXHi,X
+                lda #$f0
+                sta dinoX,X             ;set dino to the left
+
+                lda #dinoMoveSpeed      ;start animation
+                sta dinoMoveIncrement,X
+
+                lda dinoState,X
+                ora #dinoMapMove
+                sta dinoState,X         ;mark dino as transition
+
+dino_map_up     lda dinoState,X
+                and #$0f
+                cmp #directionUp
+                bne dino_map_dw
+                lda dinoY,X
+                cmp #$00
+                bne dino_map_dw
+
+                lda #$c0
+                sta dinoY,X             ;set dino to the bottom
+
+                lda #dinoMoveSpeed      ;start animation
+                sta dinoMoveIncrement,X
+
+                lda dinoState,X
+                ora #dinoMapMove
+                sta dinoState,X         ;mark dino as transition
+
+dino_map_dw     lda dinoState,X
+                and #$0f
+                cmp #directionDown
+                bne dino_map_done
+                lda dinoY,X
+                cmp #$b0
+                bne dino_map_done
+
+                lda #$f0
+                sta dinoY,X             ;set dino to the bottom
+
+                lda #dinoMoveSpeed      ;start animation
+                sta dinoMoveIncrement,X
+
+                lda dinoState,X
+                ora #dinoMapMove
+                sta dinoState,X         ;mark dino as transition
+                rts
+dino_map_done   rts
                                         ;end compute front position
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
