@@ -215,13 +215,13 @@ init            ldx #$ff
                 lda #0
                 sta $06
 
-                ldx #0
+                ldx #1
                 jsr load_map
 
 loop            lda #$fb
 raster          cmp $d012
                 bne raster      ;wait for raster
-
+                
                 inc $d020
                 ;logic
                 ldx #0          ;joystick 2
@@ -348,14 +348,14 @@ dbg_map         lda #0
                 sta $fb
                 lda #>colorRam
                 sta $fc                 ;pointer to screen chars
-                
+                                
 loop_dbg_map    ldx $02
                 lda logicMapAddr,X
                 ldx #0
                 sta ($fb,X)
                 lda #1
                 sta ($05,X)
-
+                
                 lda #2                  ;pointer += 2
                 clc
                 adc $05
@@ -541,7 +541,7 @@ dino_skip_xhi   lda $06         ;mask
 dino_addr       lda dinoY,X             ;adr = ypos
                 and #$f0
                 lsr A
-                lsr A                   ;divide by 4 (xpos/16 * 4)
+                lsr A                   ;divide by 4 (ypos/16 * 4)
                 sta dinoMapAddr,X
                 clc
                 adc dinoMapAddr,X
@@ -576,16 +576,22 @@ dino_f_up       cmp #directionUp
                 sec
                 sbc #20                 ;map width = 20
                 sta $03
-dino_f_dw       cmp #directionDown
+dino_f_dw       lda dinoState,X
+                and #$0f
+                cmp #directionDown
                 bne dino_f_lf
                 lda $03
                 clc
                 adc #20                 ;map width = 20
                 sta $03
-dino_f_lf       cmp #directionLeft
+dino_f_lf       lda dinoState,X
+                and #$0f
+                cmp #directionLeft
                 bne dino_f_rg
                 dec $03
-dino_f_rg       cmp #directionRight
+dino_f_rg       lda dinoState,X
+                and #$0f
+                cmp #directionRight
                 bne dino_f_end
                 inc $03
 dino_f_end      rts
@@ -636,7 +642,7 @@ dino_map_move   lda dinoState,X
                 lda dinoX,X
                 cmp #0
                 bne dino_map_rg
-
+                
                 lda #$01
                 sta dinoXHi,X
                 lda #$40
@@ -661,7 +667,7 @@ dino_map_rg     lda dinoState,X
                 lda dinoX,X
                 cmp #$30
                 bne dino_map_up
-
+                
                 lda #$ff
                 sta dinoXHi,X
                 lda #$f0
@@ -681,7 +687,7 @@ dino_map_up     lda dinoState,X
                 lda dinoY,X
                 cmp #$00
                 bne dino_map_dw
-
+                
                 lda #$c0
                 sta dinoY,X             ;set dino to the bottom
 
@@ -699,7 +705,7 @@ dino_map_dw     lda dinoState,X
                 lda dinoY,X
                 cmp #$b0
                 bne dino_map_done
-
+                
                 lda #$f0
                 sta dinoY,X             ;set dino to the bottom
 
