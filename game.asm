@@ -126,6 +126,7 @@ dinoMoveSpeed = 16
 spriteDinoRight = $80
 spriteDinoLeft = $88
 fruitBerry = $A0
+dinoMapMove = $80                   ;7bit walkout of screen
 
 ; 10 SYS (4096):REM @c64cosmin 2022
 
@@ -147,7 +148,7 @@ dinoX             byte 96
 dinoXHi           byte 0
 dinoY             byte 64
 dinoMapAddr       byte 0
-dinoState         byte 0
+dinoState         byte isPlayer
 dinoMoveIncrement byte 0
 dinoAnim          byte 0
 dinoSprite        byte spriteDinoRight
@@ -230,6 +231,13 @@ raster          cmp $d012
                 sty $04         ;player draw to sprite 0,1
                 jsr dino_update ;dino update
 
+                ;logic
+                lda #0
+                sta $d020
+
+                ;jsr dbg_map
+
+                jmp loop
                 ;ldx #1
                 ;jsr joy_moved
 
@@ -400,21 +408,26 @@ skip_dbg_j40
 
 dino_update     lda dinoMoveIncrement,X ;check if dino is not moving
                 cmp #0
-                bne dino_move           ;if dino is moving then move
-                lda $02                 ;else check control
+                beq dino_no_move        ;if dino is not moving then not move
+                jmp dino_move           ;if no movement just slide
+
+dino_no_move    lda $02                 ;else check control
                 and #$f                 ;for movement
                 cmp #0                  ;is dino moved
-                beq dino_draw           ;if there is no control skip
+                bne dino_ctrl           ;if there is no control skip
                                         ;else look for collision
+                jmp dino_draw
 
-                lda dinoState,X         ;load state
+dino_ctrl       lda dinoState,X         ;load state
                 and #$f0                ;drop movement
                 ora $02                 ;add control
                 sta dinoState,X         ;store state
 
+                jsr dino_map_move
+
                 jsr dino_addr
 
-                ldy $03
+                ldy $03                 ;$03 next position map addr
                 lda logicMapAddr,Y      ;load map property
                 cmp #0                  ;is tile free?
                 bne dino_draw           ;if not cannot move
@@ -597,6 +610,25 @@ dino_move_rg    cmp #directionRight
                 sta dinoSprite,X
 
 dino_move_skip  rts
+
+dino_map_move   lda dinoState,X
+                and #$0f
+                cmp #directionLeft
+                bne dino_map_rg
+                lda dinoX,X
+                cmp #0
+                bne dino_map_rg
+                
+                lda dinoX,X
+                clc
+                adc #32
+                sta dinoX,X
+
+                debug dinoState
+                
+
+dino_map_rg
+                rts
                                         ;end compute front position
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
