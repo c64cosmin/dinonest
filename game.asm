@@ -215,7 +215,7 @@ init            ldx #$ff
                 lda #0
                 sta $06
 
-                ldx #1
+                ldx #0
                 jsr load_map
 
 loop            lda #$fb
@@ -235,7 +235,7 @@ raster          cmp $d012
                 lda #0
                 sta $d020
 
-                jsr dbg_map
+                ;jsr dbg_map
 
                 jmp loop
                 ;ldx #1
